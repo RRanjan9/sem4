@@ -1,0 +1,1260 @@
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+################################################################################
+# Practical 1
+
+# Use simulation to approximate the following integral. Also compare your estimate with
+# the exact answer if known:
+
+# integration exp(x^2) range -inf to inf
+inte.fun <- function(x){
+  return(exp(-x^2))
+}
+# Actual Value
+ac <-integrate(inte.fun, -Inf, Inf)
+ac
+# plot 
+curve(inte.fun, from = -10, to = 10)
+# Simulation with random number
+# using runif()
+u <- runif(1000,-5,5)
+# Multiply of density
+ap.value <- mean(inte.fun(u))*10
+# Approximate value
+ap.value
+# Error of Approximation
+e <- abs(ap.value - ac$value)
+e
+
+################################################################################
+# Practical 2
+# Use simulation to approximate the following integral. Also compare your estimate with
+# the exact answer if known:
+# double integration of exp(-(x+y))dydx range 0 to inf and 0 to x
+# Plot
+curve(exp(-x), from = 0, to= 20)
+
+u1 <- runif(1000, 0, 10)
+u2 <- runif(1000, 0, 10)
+Iy <- ifelse(u1 <u2,1,0)
+
+ap.value <- mean(Iy*exp(-(u1+u2))*10*10)
+# Approximate value
+ap.value
+# Actual value
+ac <- 0.5
+# Error of Approximation
+e <- abs(ap.value - ac)
+e
+
+################################################################################
+# Practical 3
+
+# Let U be Uniform on (0,1). Use simulation to approximate the following:
+# Corr(u ,sqrt(1-u^2) )
+# corr(u^2,  sqrt(1-u^2))
+
+u <- runif(1000, 0,1)
+y <- sqrt(1-u^2)
+# Correlation of 1
+cor(u, y)
+x <- u^2
+# Correlation
+cor(x,y)
+
+################################################################################
+# Practical 4
+# Let us use the rejection method to generate a random variable having density function
+# f(x) = 20*x*(1-x)^3 0<x<1
+f <-function(x){
+  return(20*x*(1-x)^3)
+}
+curve(f,0,1, col =2)
+c <- 135/65 
+sam <- c()
+while(TRUE){
+  u <- runif(1, 0,1)
+  x <- runif(1,0,1)
+  if(u < f(x)/c){
+    sam <- c(sam, x)
+  }
+  if(length(sam) ==1000){
+    break
+  }
+}
+sam
+hist(sam, breaks =20)
+################################################################################
+# Practical 5
+# Implement the rejection sampling technique to generate a random variable following the
+# gamma distribution with parameters (3/2, 1), where the density function is given by
+# f(x) = K* x^0.5 * exp(-x) ;x>0
+K <- 2/sqrt(pi)
+
+f <- function(x){
+  return(2* x^0.5 * exp(-x) / sqrt(pi))
+}
+
+g <- function(x){
+  # To take a density of exponential
+  return(2* exp(-2*x/3)/3)
+}
+curve(f, 0, 10)
+curve(g, 0, 10)
+c <- 3^(3/2) /(2*pi*exp(1))^0.5
+sam <- c()
+while(TRUE){
+  u <- runif(1, 0,1)
+  x <- rexp(1, 2/3)
+  if(u < f(x)/(g(x)*c)){
+    sam <- c(sam, x)
+  }
+  if(length(sam) ==100){
+    break
+  }
+}
+sam
+hist(sam, breaks =20)
+
+
+################################################################################
+# Practical 6
+# Using the rejection technique generate a Normal random number Z(0,1) where the
+# absolute value of z has the following density function,
+# f(x) = (2/sqrt(2*pi)) * exp(-x^2 /2) ; x>0
+
+f <- function(x){
+  return((2/sqrt(2*pi)) * exp(-x^2 /2))
+}
+
+g <- function(x){
+  return(exp(-x))
+}
+c <- sqrt(2*exp(1)/ pi)
+sam <- c()
+while(TRUE){
+  u <- runif(1, 0,1)
+  x <- rexp(1, 1)
+  if(u < f(x)/(g(x)*c)){
+    sam <- c(sam, x)
+  }
+  if(length(sam) ==100){
+    break
+  }
+}
+sam
+curve(f, 0, 3)
+hist(sam, breaks =20)
+
+################################################################################
+# Practical 7
+# If Z is a standard normal variable, then show that
+# E(|z|) = sqrt(2/pi)
+# Actual value
+ac.value <- sqrt(2/pi); ac.value
+sam <- rnorm(1000)
+# Approximate value
+ap.value <- mean(abs(sam)) ; ap.value
+# Error 
+e <- abs(ap.value - ac.value); e
+################################################################################
+# Practical 8
+# Estimate the expected value E(x^2)when X ∼ N(0,1). using importance sampling with a proposal
+# distribution q(x) = N(5,2). Compare the target distribution p(x) and the proposal distribution q(x)
+# using a density plot.
+
+sam1 <- rnorm(1000, 0, 1)
+expx2 <- mean(sam1^2)
+expx2
+
+true_ex<- 1 
+# important  sampling
+sam2 <- rnorm(1000, 5,2)
+
+weights <- dnorm(sam2, 0,1)/ dnorm(sam2, 5,2) 
+
+exx2_imp <- sum(weights*sam2^2)/sum(weights) 
+exx2_imp
+
+x_vals <- seq(-5, 10, length.out = 1000)
+p_vals <-dnorm(x_vals, 0, 1)
+q_vals <- dnorm(x_vals, 5, 2)
+
+
+plot(x_vals, p_vals, type = "l", col = "blue", lwd = 2, ylim = c(0, max(p_vals, q_vals)), 
+     xlab = "x", ylab = "Density", main = "Comparison of Target and Proposal Distributions")
+lines(x_vals, q_vals, col = "red", lwd = 2, lty = 2)  
+
+################################################################################
+# Practical 9
+p <- 0.3
+geo_simu <- function(p){
+  x <- 1
+  while (TRUE) {
+    u <- runif(1)
+    if(u <p){
+      return(x)
+    }
+    x <- x+1
+  }
+}
+
+n <- 1000
+samp <- replicate(n, geo_simu(p))
+x_vals <- 1:20
+theo_p <- (1-p)^(x_vals -1)*p
+
+sim_p <- table(samp) / n
+
+plot(as.numeric(names(sim_p)), as.numeric(sim_p), type = "h", col = "blue", lwd = 2, 
+     xlab = "X", ylab = "P(X)", main = "Simulated vs Theoretical Geometric Distribution",
+     ylim = c(0, max(sim_p, theo_p)))
+points(x_vals, theo_p, col = "red", pch = 19)
+legend("topright", legend = c("Simulated", "Theoretical"), col = c("blue", "red"), lwd = 2, pch = c(NA, 19))
+
+################################################################################
+# Practical 10
+# Suppose X is a random variable following the probability density function f(x). Use Monte Carlo
+# simulation to estimate the expectation of function h(x) = x/2^(x-1) 
+# Apply the Antithetic Variates Method to
+# improve the efficiency of the estimation and reduce variance. Use k samples to verify the accuracy of the
+# estimates. Compare the computational efficiency (time taken) and variance of both methods. Provide a
+# visualization of the Monte Carlo and Antithetic estimates to demonstrate the variance reduction effect.
+
+# let assume x ~ unifrom (0,1)
+h <- function(x){
+  return( x/2^(x-1))
+}
+
+l <- data.frame(n = c(),mean_mc =c(), var_mc =c(),mean_av= c(),var_av =c(), per_var = c())
+K = c(1000, 2000, 6000)
+for(n in K){
+  ###    Basic Monte Carlo
+  u <- runif(n)
+  mean_mc <- mean(h(u))
+  var_mc <- var(h(u))
+  # cat("Basic MC Estimate: ",mean_mc , "\n")
+  # cat("Variance - Basic MC: ", var_mc, "\n")
+  
+  ###    Antithetic Variates
+  u1 <- runif(n/2)
+  u2 <- 1-u1
+  mean_av <- (mean(h(u1))+mean(h(u2)))/2
+  var_av <-(var(h(u1))+var(h(u2))+ 2* cov(h(u1), h(u2)))/(4*n)
+  # cat("Antithetic Estimate: ",mean_av , "\n")
+  # cat("Variance - Antithetic: ",var_av  , "\n")
+  # percent of variance reduction with respect to var_mc
+  per_var <- (var_mc -var_av )*100/var_mc
+  l1 <- data.frame(n =c( n),mean_mc =c(mean_mc), var_mc =c(var_mc),mean_av= c(mean_av),var_av =c(var_av), per_var = c(per_var))
+  l <- rbind(l,l1)
+}
+l
+barplot(l$var_mc)
+barplot(l$var_av)
+
+
+
+################################################################################
+# Practical 11
+#Suppose Xis a random variable following the Exponential distribution with parameter λ.
+#Use Monte Carlo simulation to estimate the expectation of the function h(x) = exp(-x).
+#Apply the control Variates Method to improve the efficiency of the estimation and reduce
+#variance. Use k samples to verify the accuracy of the estimates. Compare the
+#computational efficiency (time taken) and variance of both methods. Provide a
+#visualization of the Monte Carlo and Antithetic estimates to demonstrate the variance
+# reduction effect.
+
+h <- function(x){
+  return( x/2^(x-1))
+}
+
+g <- function(x) {
+  x
+}
+l <- data.frame(n = c(),mean_mc =c(), var_mc =c(),mean_av= c(),var_av =c(), per_var = c())
+K = c(1000, 2000, 6000)
+for(n in K){
+  ###    Basic Monte Carlo
+  u <- rexp(n,1)
+  mean_mc <- mean(h(u))
+  var_mc <- var(h(u))
+  # cat("Basic MC Estimate: ",mean_mc , "\n")
+  # cat("Variance - Basic MC: ", var_mc, "\n")
+  
+  ###    Antithetic Variates
+  u1 <- rexp(n/2, 1)
+  u2 <- g(u1)
+  mean_av <- (mean(h(u1))+mean(h(u2)))/2
+  var_av <-(var(h(u1))+var(h(u2))+ 2* cov(h(u1), h(u2)))/(4*n)
+  # cat("Antithetic Estimate: ",mean_av , "\n")
+  # cat("Variance - Antithetic: ",var_av  , "\n")
+  # percent of variance reduction with respect to var_mc
+  per_var <- (var_mc -var_av )*100/var_mc
+  l1 <- data.frame(n =c( n),mean_mc =c(mean_mc), var_mc =c(var_mc),mean_av= c(mean_av),var_av =c(var_av), per_var = c(per_var))
+  l <- rbind(l,l1)
+}
+l
+barplot(l$var_mc)
+barplot(l$var_av)
+
+
+################################################################################
+# Practical 12
+# AR(1) Process simulation
+
+T <- 100
+phi <- 0.7
+sigma <- 1.5
+
+y <- numeric(T)
+ep <- rnorm(T, mean = 0, sd = sigma) 
+y[1] <- ep[1] 
+
+for( t in 2:T){
+  y[t] <- phi* y[t-1] +ep[t] 
+}
+# AR(1) simulation
+plot(1:T, y, col = 2,type = 'l')
+
+# MH algorithm to estimate the parameters
+#Not done in practical(said to leave)
+
+################################################################################
+# Practical 13
+
+# 1.Run the MCMC simulation using MH algorithm for 10,000 iterations to generate
+# samples of the parameters.
+# 2. Estimate the variance of the posterior mean using the nonoverlapping batch mean
+# (NBM ) method. Also, provide the necessary plots.
+
+set.seed(123)
+ar1<-function(T,phi,sigma){
+  y <- numeric(T)
+  ep <- rnorm(T, mean = 0, sd = sigma) 
+  y[1] <- ep[1] 
+  
+  for( t in 2:T){
+    y[t] <- phi* y[t-1] +ep[t] 
+  }
+  return(y)
+}
+
+T <- 100
+phi <- 0.7
+sigma <- 1.5
+y<-ar1(T,phi,sigma)
+
+mh_sampler<-function(y,n,sd_phi=0.1,sd_sigma2=0.1){
+  phi_mh<-numeric(n)
+  sigma2_mh<-numeric(n)
+  phi_mh[1]<-runif(1,-1,1)
+  sigma2_mh[1]<-var(y)
+  log_like<-function(phi,sigma2,y){
+    l<-length(y)
+    sum(dnorm(y[-1],mean=phi*y[-l],sd=sqrt(sigma2),log = T))
+  }
+  for(i in 2:n){
+    phi_prop<-rnorm(1,phi_mh[i-1],sd_phi)
+    sigma2_prop<-rnorm(1,sigma2_mh[i-1],sd_sigma2)
+    if(abs(phi_prop)<1 && sigma2_prop>0){
+      log_acp_ratio<-log_like(phi_prop,sigma2_prop,y) - log_like(phi_mh[i-1],sigma2_mh[i-1],y)
+      if(log(runif(1))<log_acp_ratio){
+        phi_mh[i]<-phi_prop
+        sigma2_mh[i]<-sigma2_prop
+      }
+      else{
+        phi_mh[i]<-phi_mh[i-1]
+        sigma2_mh[i]<-sigma2_mh[i-1]
+      }
+    }
+  }
+  return(list(phi=phi_mh,sigma2=sigma2_mh))
+}
+samples<-mh_sampler(y,n=10000);samples
+
+nbm_var<-function(x,batch_size){
+  n_batch<-floor(length(x)/batch_size)
+  batch_mean<-sapply(1:n_batch,function(i){
+    mean(x[((i-1)*batch_size+1) : (i*batch_size)])
+  })
+  return(var(batch_mean)/n_batch)
+}
+cat('Estimated variance of phi using NBM :',nbm_var(samples$phi,batch_size = 50))
+cat('Estimated variance of sigma2 using NBM :',nbm_var(samples$sigma2,batch_size = 50))
+
+par(mfrow=c(3,2))
+plot(samples$phi,type = 'l',main = 'Trace plot of phi',xlab = 'iterations',ylab = 'phi')
+plot(samples$sigma2,type = 'l',main = 'Trace plot of sigma^2',xlab = 'iterations',ylab = 'sigma^2')
+hist(samples$phi,breaks = 50,probability = T)
+hist(samples$sigma2,breaks = 50,probability = T)
+acf(samples$phi,main = 'Autocorrelation function of phi')
+acf(samples$sigma2,main = 'Autocorrelation function of sigma^2')
+
+################################################################################
+# Practical 14
+# Generate random samples from a Normal distribution using the Metropolis-Hastings
+# (M-H) algorithm and estimate its parameters. Then, implement a burn-in period to
+# remove initial bias and compare results using the Mean Squared Error (MSE).
+# Do it for different sample sizes (n=50,100,250)
+
+
+mh_sample<-function(n,mu = 0,sigma = 1,prop_sd = 1){
+  set.seed(123)
+  samples<-numeric(n)
+  x<-rnorm(1,mu,sigma)
+  samples[1]<-x
+  for(i in 2:n){
+    prop<-rnorm(1,x,prop_sd)
+    acc_ratio<-dnorm(prop,mu,sigma)/dnorm(x,mu,sigma)
+    if(runif(1)<acc_ratio){
+      x<-prop
+    }
+    samples[i]<-x
+  }
+  return(samples)
+}
+
+n_mh<-10000
+mu<-0
+sigma<-1
+samples<-mh_sample(n_mh,mu,sigma,prop_sd=2)
+plot(cumsum(samples)/1:n_mh)
+
+n<-c(50,100,250)
+results<-data.frame(n=integer(),est_mean=numeric(),est_sd=numeric(),mse_mean=numeric(),mse_sd=numeric(),
+                    est_mean_burn=numeric(),est_sd_burn=numeric(),mse_mean_burn=numeric(),
+                    mse_sd_burn=numeric())
+for(t in n){
+  s<-mh_sample(t)
+  est_mean<-mean(s)
+  est_sd<-sd(s)
+  mse_mean<-(mu-est_mean)^2
+  mse_sd<-(sigma-est_sd)^2
+  s_b<-samples[5000:(5000+t-1)]
+  est_mean_burn<-mean(s_b)
+  est_sd_burn<-sd(s_b)
+  mse_mean_burn<-(mu-est_mean_burn)^2
+  mse_sd_burn<-(sigma-est_sd_burn)^2
+  results<-rbind(results,data.frame(n=t,est_mean=est_mean,est_sd=est_sd,mse_mean=mse_mean,mse_sd=mse_sd,
+                                    est_mean_burn=est_mean_burn,est_sd_burn=est_sd_burn,
+                                    mse_mean_burn=mse_mean_burn,mse_sd_burn=mse_sd_burn))
+}
+print(results)
+
+
+################################################################################
+# Practical RR Sir Practical 1 
+# delivery time data calculate residual, standardised residual, studentized residual
+# press residual, find influential obs. and leverage point
+
+
+data <- data.frame(obsno = 1:25,
+                   y = c(16.68,11.50,12.03,14.88,13.75,18.11,8,17.83,79.24,21.50,40.33,21,13.50,19.75,24,29,15.35,19,9.50,35.10,17.90,52.32,18.75,19.83,10.75),
+                   x1 = c(7,3,3,4,6,7,2,30,5,10,16,4,6,6,9,10,6,7,3,17,10,26,9,8,4),
+                   x2 = c(560,220,340,80,150,330,110,1460,605,688,215,255,462,448,448,60,200,132,36,770,140,810,450,635,150))
+
+
+# Fit multiple linear regression model
+model <- lm(y ~ x1 + x2, data = data)
+
+# Residuals
+data$residual <- residuals(model)
+
+# Standardized residuals
+data$standardized_resid <- rstandard(model)
+
+# Studentized residuals
+data$studentized_resid <- rstudent(model)
+
+# Leverage (hat values)
+data$leverage <- hatvalues(model)
+
+# Cook's Distance (Influence measure)
+data$cooks_distance <- cooks.distance(model)
+
+# PRESS residuals: prediction residuals
+press_resid <- residuals(model) / (1 - hatvalues(model))
+data$press_resid <- press_resid
+
+# Optional: Thresholds
+leverage_cutoff <- 2 * (length(coef(model)) / nrow(data))  # Common threshold
+influential_cooks_cutoff <- 4 / nrow(data)
+
+# Identify influential observations and high leverage points
+data$high_leverage <- data$leverage > leverage_cutoff
+data$influential <- data$cooks_distance > influential_cooks_cutoff
+
+# View results
+print(data)
+
+
+################################################################################
+
+
+##### Bayesian
+
+##practical 1
+## Let us consider the following dataset from Normal distribution N(μ , 1).
+## Let us consider μ ~ Ν ( τ , 2) is the prior distribution . 
+## Obtain the posterior distribution for the parameter μ and plot the prior and
+## posterior distribution in the same graph for τ = 10,15 and 20 . 
+## Also, obtain the posterior mean for each value of the hyperparameter τ.
+## 9.48,17.15,11.68,10.00,11.88,12.13,14.93,9.73,7.61,7.21,10.28,7.03,11.01,12.36,13.28,6.58,11.07,12.56,8.18,9.17
+
+library(stats)
+dataset<-c(9.48,17.15,11.68,10.00,11.88,12.13,14.93,9.73,7.61,7.21,10.28,7.03,11.01,12.36,13.28,6.58,11.07,12.56,8.18,9.17)
+prior_mu<-0
+prior_sd<-sqrt(2)
+calculate_posterior<-function(dataset,prior_mu,prior_sd,t){
+  n<-length(dataset)
+  dataset_mean<-mean(dataset)
+  posterior_sd<-1/sqrt((1/prior_sd^2)+(n/t^2))
+  posterior_mu<-posterior_sd^2*((prior_mu/prior_sd^2)+(dataset_mean*n/t^2))
+  return(list(mu=posterior_mu,sd=posterior_sd))
+}
+t_values<-c(10,15,20)
+posterior_distributions<-list()
+posterior_means<-c()
+for(t in t_values){
+  posterior<-calculate_posterior(dataset,prior_mu,prior_sd,t)
+  posterior_distributions[[as.character(t)]]<-posterior
+  posterior_means<-c(posterior_means,posterior$mu)
+}
+par(mfrow=c(1,length(t_values)),mar=c(5,5,2,2))
+for(i in 1:length(t_values)){
+  t<-t_values[i]
+  posterior<-posterior_distributions[[as.character(t)]]
+  x<-seq(prior_mu-4*prior_sd,prior_mu+4*prior_sd,length.out=100)
+  y_prior<-dnorm(x,prior_mu,prior_sd)
+  y_posterior<-dnorm(x,posterior$mu,posterior$sd)
+  plot(x,y_prior,type="l",col="blue",xlab="mu",ylab="density",main=paste("t=",t))
+  lines(x,y_posterior,col="red")
+  legend("topright",legend = c("prior","posterior"),col=c("blue","red"),lty = 1)
+}
+cat("Posterior Means:\n")
+for(i in 1:length(t_values)){
+  cat("t=",t_values[i],":",posterior_means[i],"\n")
+}
+
+
+##practical 2
+##Let us consider the following dataset follows an exponential distribution 
+## with scale parameter θ. let us consider the prior% . 
+## Obtain posterior distribution, Bayes Estimator, and 0-95 ΗPD interval for the parameter θ .
+## 3.29,7.53,0.48,2.03,0.36,0,07,4.49,1.05,9.15,3.67,2.22,2.16,4.06,11.62,8.26,1.96,9.13,1.78,3.81,17.02
+
+data<-c(3.29,7.53,0.48,2.03,0.36,0,07,4.49,1.05,9.15,3.67,2.22,2.16,4.06,11.62,8.26,1.96,9.13,1.78,3.81,17.02)
+alpha<-1
+beta<-1
+likelihood<-function(theta,data){
+  n<-length(data)
+  sum(-theta*data)+n*log(theta)
+}
+posterior<-function(theta,data,alpha,beta){
+  likelihood(theta,data)+dgamma(theta,alpha,beta,log = TRUE)
+}
+theta_values<-seq(0.001,10,by=0.001)
+posterior_values<-sapply(theta_values,posterior,data=data,alpha=alpha,beta=beta)
+posterior_density<-exp(posterior_values-max(posterior_values))
+posterior_density<-posterior_density/sum(posterior_density)
+bayes_estimator<-sum(posterior_density*theta_values)
+cdf<-cumsum(posterior_density)
+lower_index<-min(which(cdf>=0.025))
+upper_index<-min(which(cdf>=0.975))
+hpd_interval<-c(theta_values[lower_index],theta_values[upper_index])
+cat("Bayes Estimator:",bayes_estimator,"\n")
+cat("0.95 HPD interval:",hpd_interval[1],"-",hpd_interval[2],"\n")
+
+
+
+##practical 3
+## Consider the situation where in a child is given an intelligence test. Assume that the test result X is N( θ, 100), 
+## where θ is the true IQ level of the child measured by the test. In other words if the child were to take a large number
+## Of independent similar tests, his average score would be θ. Assume also that the population, as a whole, θ is distributed 
+## according to a N(100, 225) distribution. Thus, if a child scores 115 on the test then,
+## a. Obtain the distribution of his Io . 
+## b. Obtain Baye's decision under the following setup of actions and loss functions
+## Actions are defined as :
+## a1: IQ is below average (θ< 90)
+## a2: IQ is average ( 90 <= θ < =110)
+## a3: IQ is above average (θ > 110)
+
+## loss function are defined as :
+## L(θ , a1 ), L(θ , a2 ),L(θ , a3)
+
+calculate_posterior<-function(test_score,prior_mean,prior_variance,test_variance){
+  posterior_mean<-(prior_mean/prior_variance+test_score/test_variance)/(1/prior_variance+1/test_variance)
+  posterior_variance<-1/(1/prior_variance+1/test_variance)
+  return(list(mean=posterior_mean,variance=posterior_variance))
+}
+test_score<-115
+prior_mean<-100
+prior_variance<-225
+test_variance<-100
+posterior<-calculate_posterior(test_score,prior_mean,prior_variance,test_variance)
+posterior_mean<-posterior$mean
+posterior_variance<-posterior$variance
+distribution<-paste("N(",posterior_mean,",",posterior_variance,")")
+action1_loss<-function(theta){
+  if(theta<90){
+    return(0)
+  }
+  else if(theta>=90&&theta<110){
+    return(theta-90)
+  }
+  else{
+    return(2*(theta-90))
+  }
+}
+
+action2_loss<-function(theta){
+  if(theta<90){
+    return(90-theta)
+  }
+  else if(theta>=90&&theta<110){
+    return(0)
+  }
+  else{
+    return(theta-110)
+  }
+}
+
+action3_loss<-function(theta){
+  if(theta<90){
+    return(2*(theta-110))
+  }
+  else if(theta>=90&&theta<110){
+    return(110-theta)
+  }
+  else{
+    return(0)
+  }
+}
+decision<-c(action1_loss(posterior_mean),action2_loss(posterior_mean),action3_loss(posterior_mean))
+bayes_decision<-paste("a",which.min(decision),sep="")
+cat("Distribution of true IQ:",distribution,"\n")
+cat("Bayes decision:",bayes_decision,"\n")
+
+
+
+
+#practical 4
+fmu<-82.1
+pmu<-82.4
+psig<-1.1
+fsig<-1.7
+ro<-1/((psig)^2)+1/((fsig)^2)
+mux<-(fmu/((fsig)^2)+pmu/((psig)^2))/ro
+sigx<-(1/ro)^(0.5)
+prior<-pnorm(83,pmu,psig)/(1-pnorm(83,pmu,psig))
+post<-pnorm(83,mux,sigx)/(1-pnorm(83,mux,sigx))
+bayes<-post/prior
+if(bayes>1)
+  print("we accept H0 i.e mass of electron is less than 83")
+if(bayes<1)
+  print("We accept H1 i.e mass of electron is greater than 83")
+if(bayes==1)
+  print("neither H0 nor H1")
+variable<-c("Prior_hours","POsterior_hours","bayes_factor")
+Estimate<-c(prior,post,bayes)
+data.frame(variable,Estimate)
+
+
+
+####Cism
+##Mid Square Method practical 1
+z<-array(0,dim=500)
+z[1]=2182   ##four digit number
+for(i in 1:500){
+  z[i+1]=z[i]^2%/%100%%10000
+}
+z
+u=z/10000
+u
+hist(u)
+#LCG Method
+m=15
+c=5;a=3
+z=array(0,dim = 20)
+n=20
+z[1]=7
+for(i in 1:n){
+  z[i+1]=(a*z[i]+c)%%m
+}
+z
+u<-z/m
+u
+##convert this random numbers from 10 to 20
+u1=10*u+10;u1
+
+
+
+###Box Muller#practical 2
+n<-100
+observations<-numeric(n)
+for(i in 1:n){
+  u1<-runif(100)
+  u2<-runif(100)
+  z1<-sqrt(-2*log(u1))*cos(2*pi*u2)
+  z2<-sqrt(-2*log(u1))*sin(2*pi*u2)
+  observations[i]<-z1}
+observations
+plot(density(observations))
+##acceptance-rejection method
+target_pdf=function(x)
+{
+  return(sqrt(2/pi)*exp(-x^2/2))
+}
+x=seq(0,5,0.1)
+pdf_x=target_pdf(x)
+plot(x,pdf_x)
+lines(x,exp(-x))
+n=5000
+y=rexp(n,1)
+u=runif(n,0,1)
+c=sqrt(2/pi)*exp(0.5)
+z=c()
+j=1
+for(i in 1:n)
+{  t=target_pdf(y[i])/(c*dexp(y[i],1))
+if(u[i]<=t)
+{ z[j]=y[i]
+j=j+1;
+}
+}
+z
+m=length(z)
+plot(density(z))
+hist(z,freq=F)
+
+##double exponential
+u1<-runif(1000)
+u2<-runif(1000)
+t=array()
+for(i in 1:1000){
+  if(u1[i]<=1/2){
+    t[i]<-log(u2[i])
+  }
+  else{t[i]=-log(1-u2[i])}
+}
+plot(density(t))
+t
+u=runif(1000)
+z=array()
+j=1
+c=sqrt(2*2.71/3.14)
+for(i in 1:1000){
+  if(u[i]<=((1/sqrt(2*3.14))*exp(-(t[i]^2)/2))/(((1/2)*exp(-abs(t[i]))*c))){
+    z[j]=t[i]
+    j=j+1
+  }
+}
+plot(density(z))
+z
+length(z)
+
+
+##Gamma practical 3
+rm(gamma)
+scale=10
+shape=0.6
+rate=1/scale;rate
+lambda=rate/shape;lambda
+c1=(1/gamma(shape))/(rate/shape)*(((shape-1)/(rate-lambda))^(shape-1))*exp(1-shape);c1
+target_pdf<-function(x,shape,scale){
+  return((1/(gamma(shape)*(scale^shape)))*(exp(-x/scale)*(x^(shape-1))))
+}
+x=seq(0,1000,1);length(x)
+pdf_x=target_pdf(x,shape,scale)
+plot(x,pdf_x)
+plot(x,(c1*(1/(shape*scale))*(exp(-1/((shape*scale))*x))))
+n=500
+y=rexp(n,rate=1/(shape*scale))
+u=runif(n,0,1)
+z=c()
+j=1
+for(i in 1:n){
+  t=target_pdf(y[i],shape,scale)/(c1*(1/(shape*scale)*exp(-(1/(shape*scale)*y[i]))))
+  if(u[i]<=t){
+    z[j]=y[i]
+    j=j+1
+  }
+}
+p=z[1:100];p
+m=length(p);m
+plot(density(p))
+hist(p,freq = F)
+
+
+
+
+
+##practical 4
+library(MASS)
+log_normal<-rlnorm(100,meanlog = 2,sdlog=0.6)
+log_normal
+fit<-fitdistr(log_normal,densfun="lognormal")
+fit$estimate
+
+
+
+scale<-10
+expo<-rexp(100,rate = 1/scale)
+expo
+likelihood<-function(scale,data){
+  -sum(log(dexp(data,rate = 1/scale))) 
+}
+mle<-optim(par = 1,fn = likelihood,data=expo)
+mle$par
+
+c<-10
+obs<-rexp(100,rate = 1)
+obs<-obs[obs<=c]
+obs
+n<-length(obs)
+mle<-n/sum(obs)
+mle
+truncate_weibull<-function(n,c){
+  variable<-numeric(n)
+  i<-1
+  while(i<=n){
+    x<-rweibull(1,shape = 1,scale = 1)
+    if(x<=c){
+      variable[i]<-x
+      i<-i+1}
+  }
+  variable
+}
+weibull=truncate_weibull(100,c);weibull
+
+
+
+library(MASS)
+fit<-fitdistr(weibull,densfun = "weibull",start = list(shape=1,scale=1),lower=list(shape=0,scale=0))
+fit$estimate
+
+
+
+
+####practical5
+## estimate pi
+n<-20
+x<-runif(n,min=-2,max=2)
+y<-runif(n,min =-2,max = 2)
+for(i in 1:n){
+  cat("(",x[i],",",y[i],")\n")
+}
+count<-sum(x^2+y^2<=4)
+estimated_pi<-4*count/n;estimated_pi
+plot(n,estimated_pi,type="l",xlab=20,ylab=3.6,main="convergence of estimated pi")
+
+
+##practical 6
+install.packages("survival")
+library(survival)
+lifetimes<-c(2.231011,3.172750,3.489482,3.564249,3.651828,3.775029,4.128005,4.330958,4.652746,4.694818,4.799658,4.967496,5.156554,5.169422,5.273725,5.420835,5.613455,5.758367)
+censoring<-rep(1,length(lifetimes))
+surv<-Surv(lifetimes,censoring)
+fit<-survreg(surv~1,dist = "gaussian",control = survreg.control(maxiter = 1000))
+coef(fit)
+fit
+
+
+
+#### Regression
+
+
+data=cbind(c(1.6907, 1.7242, 1.7552, 1.7842, 1.8113,1.8369, 1.861, 1.8839),c(59, 60, 62, 56, 63, 59, 62, 60), 
+           c(6, 13, 18, 28, 52, 53, 61, 60))
+colnames(data) <-c("logarithm ofCS2 concentration ", "no of beetles","no of killed")
+data
+N<-length(data)
+ni<-data[,2]
+xi<-data[,1]
+yi<-data[,3]
+logistic<-glm(cbind(yi,ni-yi) ~ xi, family=binomial(logit), data=data.frame(data))
+logistic
+propi <- yi/ni
+
+# Fitted logistic model
+fit.logis <- Vectorize(function(d)  plogis(logistic$coefficients[1] +logistic$coefficients[2]*d))
+
+curve(fit.logis,1.6,2, xlab = "Dose", ylab = "Proportion", main = "Fitted Model", lwd = 2, cex.axis = 1.5, cex.lab = 1.5)
+points(xi,propi,pch=10,col="red",lwd=2)
+logistic$coefficients[1]
+
+##practical2
+Y<-c(2,3,6,7,8,9,10,12,15)
+X<-c(-1,-1,0,0,0,0,1,1,1)
+pois<-glm(Y~X,family = "poisson")
+summary(pois)
+pois$fitted.values
+par(mfrow = c(2,3))
+plot(pois, which = 1:6)
+par(mfrow = c(1,1))
+
+
+
+##practical3
+if (!requireNamespace("minpack.lm", quietly = TRUE)) {
+  install.packages("minpack.lm")
+}
+library(minpack.lm)
+
+# Define the data
+x <- c(8, 10, 12, 14, 16, 18, 20, 22, 24, 26, 28, 30, 32, 34, 36, 38, 40, 42)
+y <- c(0.490, 0.475, 0.450, 0.437, 0.433, 0.455, 0.423, 0.407, 0.407, 0.407, 
+       0.405, 0.393, 0.405, 0.400, 0.395, 0.400, 0.390, 0.390)
+
+# Define the nonlinear model
+model <- function(params, x) {
+  a <- params[1]
+  beta <- params[2]
+  a + exp(-beta * (x - 8))
+}
+
+
+residuals <- function(params, x, y) {
+  y - model(params, x)
+}
+
+# Initial guesses for parameters
+start_params <- c(a = 0.4, beta = 0.1)
+
+# Fit the model using nonlinear least squares
+fit <- nls.lm(par = start_params, fn = residuals, x = x, y = y)
+
+# Extract the estimated parameters
+params <- coef(fit)
+a <- params["a"]
+beta <- params["beta"]
+
+# Print the estimated parameters
+cat("Estimated parameters:\n")
+cat("a =", a, "\n")
+cat("beta =", beta, "\n")
+
+
+
+
+
+
+
+####practical 4
+#y: Delivery Time(in min)
+
+y<-c(16.68, 11.50, 12.03, 14.88, 13.75, 18.11, 8.00,17.83,79.24, 21.50,40.33,21.00, 13.50,19.75,24.00,29.00, 15.35, 19.00,9.50,35.10,17.90,52.32,18.75,19.83, 10.75)
+
+y
+
+
+
+#x1: Number of cases
+
+x1<-c(7,3,3,4,6,7,2,7,30,5,16,10,4,6,9,10,6,7,3,17,10,26,9,8,4)
+
+x1
+
+
+#x2: Distance (in ft)
+
+x2<-c(560,220,340,80,150,330, 110,210,1460,605,688,215,255,462,448,776,200,132, 36,770,140,810,450,635,150)
+
+x2
+
+
+
+data<-data.frame(x1,x2)
+
+data
+
+# Obtaining Leverage Point
+
+model=lm(y~.,data=data)
+
+model
+
+summary(model)
+
+#use of hatvalues() function to extract the leverage values, leverage values
+
+# ranges b/w 0-1. values closer to 1 indicates high leverages.
+
+leverage<-hatvalues(model)
+
+leverage
+
+
+threshold<- 2*length(coef(model))/length (model$residuals)
+
+threshold
+
+high_leverage_values<-which (leverage>threshold)
+
+high_leverage_values
+
+# Conclusion: From the leverages obtained, the leverage value of obs.9 and obs.22 # are the two most leveraged values in the model.
+
+# Obtaining the influential Point model
+
+# there are three ways to detect the influential point:
+
+#a) using cook statistic,
+
+
+
+cook_dist<-cooks.distance(model)
+
+cook_dist
+
+
+threshold_cook <-4/(length (model$residuals))
+
+threshold_cook
+
+influential_values<- which(cook_dist>threshold)
+
+influential_values
+
+dfbetas<- dfbetas (model)
+
+dfbetas
+
+
+dfits<- dffits(model)
+
+dfits
+
+model=lm(y~.,data=data)
+
+model
+
+summary(model)
+
+
+residuals<-summary(model) $residuals
+
+residuals
+
+predicted_values<-predict(model)
+
+predicted_values
+
+
+press_residuals<-residuals(model,type="response")/(1-hatvalues(model))
+
+press_residuals
+
+
+raw_residuals<-residuals(model)
+
+raw_residuals
+
+
+studentized_residuals<-rstudent(model)
+
+studentized_residuals
+
+
+
+
+####practical 5
+y<-c(8.01,9.06,10.31,11.78,12.43,13.31,13.10,14.94,16.17,14.71,13.20,13.19,11.70,10.99,10.80,10.66,10.75,9.47,10.31,8.88);y
+length(y)
+#X2: price at well hear in the previous year
+
+x2<-c(4.89,4.83,4.68,4.42,4.36,4.55,4.66,4.54,4.44,4.75,4.56,4.29,4.19, 4.17,4.11,4.04,3.96,3.85,3.75,3.69)
+
+x2
+length(x2)
+#x3: domestic output
+
+x3<-c(5.52,5.05,5.41,6.16,6.26,6.34,6.81,7.15,7.17,6.71,7.05,7.04,7.18, 7.33,7.54,7.61,7.80,8.30,8.81,8.66)
+
+x3
+length(x3)
+#x4: GNP constant
+
+x4<-c(487.67,490.55,533.55,576.57,598.62,621.77,613.57,654.80,668.84,681.02,879.53,720.53,736.86,755.34,799.15,830.70,874.29,925.66,980.98,1007.72)
+
+x4
+length(x4)
+#x5: trend value/time
+
+x5<-c(1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20)
+x5
+length(x5)
+
+library(stats)
+
+data<-data.frame(x2,x3,x4,x5)
+
+data
+
+mlr_model<-lm(y~.,data=data)
+
+mlr_model
+
+summary(mlr_model)
+
+loglin_model<-glm(log(y)~.,data=data);loglin_model
+
+summary(loglin_model)
+
+#For MLR, we are looking at the coeficient of determination and adjusted r_2. #higher the values of coeficient of determination and adjusted r_2 it indicates the #better fit. For Log-linear regression, we will examine at the deviance and AIC, lower #the deviance and AIC indicates the better fit.
+
+#Conclusion: The Log linear model provides the better fit with the lower and #negative value of AIC.
+
+#b)
+
+model<-lm(y~., data=data)
+
+model
+
+residuals=model$residuals #extraction of residuals
+
+residuals
+
+n=length(residuals)
+
+n
+
+numerator=sum(diff(residuals)^2)
+
+numerator
+
+denominator=sum(residuals^2)
+
+denominator
+
+durbin_watson=numerator/denominator
+
+durbin_watson
+
+#The durbin watson test ranges from 0-4
+
+#Value close to 2 indicates NO Autocorrelation, less than 2 indicates
+
+#positive autocorrelation, greater than 2 indicates negative correlation
+
+#Conclusion: As the value of durbin watson test is 0.80 which is less than 2 #indicates positive correlation.
+
+
+
+godfrey_model=lm(y~.,data=data)
+
+godfrey_model
+
+godfrey_residuals=residuals(godfrey_model)
+
+godfrey_residuals
+
+lagged_residuals=c(NA,head(godfrey_residuals,-1));lagged_residuals
+
+auxiliary_model=lm(godfrey_residuals~lagged_residuals)
+
+auxiliary_model
+
+r_squared=summary(auxiliary_model)$r.squared 
+r_squared
+
+n=length(godfrey_residuals)
+
+Breusch_Godfrey<-n*r_squared
+
+Breusch_Godfrey
+
+summary(Breusch_Godfrey)
+
+#by the visual inspecation of acf and pacf we can decide the value of p for #specific lags occuring.
+
+acf=acf(godfrey_residuals)
+
+acf
+
+pacf=pacf(godfrey_residuals)
+
+
+
+
+pacf
+
+p_value=1-pchisq(Breusch_Godfrey,df=1); p_value
+
+#bgtest-bgtest(auxiliary_model.order=p) here p is the order of the #autoregressive error structure we want to calculate.
+
+bgtest=bgtest(auxiliary_model,order=1)
+
+
+
+new_model<-lm(y~x4+x5,data=data)
+
+new_model
+
+summary(new_model)
+
+
+
+model_e<-lm(y~x3+x5,data-data)
+
+model_e
+
+summary(model_e)
+
+#f)
+
+install.packages("lmtest")
+
+library(lmtest)
+
+bpg_test<-bptest(lm(y~x4),data=data)
+
+bpg_test
+
+kb_test=bptest(lm(y~x4),data=data,studentize=FALSE);kb_test
+
+# Conclusion: Lower the p-value, evidences the presence of heteroscedasticity.
+
+# In this scenario, breusch-pagan-godfrey test indicates the presence
+
+# of heteroscedasticity.
+

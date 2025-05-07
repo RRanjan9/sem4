@@ -1,0 +1,912 @@
+# Practical 1
+
+# Use simulation to approximate the following integral. Also compare your estimate with
+# the exact answer if known:
+
+# integration exp(x^2) range -inf to inf
+inte.fun <- function(x){
+  return(exp(-x^2))
+}
+# Actual Value
+ac <-integrate(inte.fun, -Inf, Inf)
+ac
+# plot 
+curve(inte.fun, from = -10, to = 10)
+# Simulation with random number
+# using runif()
+u <- runif(1000,-5,5)
+# Multiply of density
+ap.value <- mean(inte.fun(u))*10
+# Approximate value
+ap.value
+# Error of Approximation
+e <- abs(ap.value - ac$value)
+e
+
+################################################################################
+# Practical 2
+
+# Use simulation to approximate the following integral. Also compare your estimate with
+# the exact answer if known:
+# double integration of exp(-(x+y))dydx range 0 to inf and 0 to x
+# Plot
+curve(exp(-x), from = 0, to= 20)
+f = function(x, y) { exp(-(x + y)) }
+u1 <- runif(10000, 0, 10)
+u2 <- runif(10000, 0, 10)
+Iy <- ifelse(u1 <=u2,1,0)
+
+ap.value <- mean(Iy*f(u1, u2))*(10*10)
+# Approximate value
+ap.value
+# Actual value
+ac <- 0.5
+# Error of Approximation
+e <- abs(ap.value - ac)
+e
+
+################################################################################
+# Practical 3
+
+# Let U be Uniform on (0,1). Use simulation to approximate the following:
+# Corr(u ,sqrt(1-u^2) )
+# corr(u^2,  sqrt(1-u^2))
+
+u <- runif(1000, 0,1)
+y <- sqrt(1-u^2)
+# Correlation of 1
+cor(u, y)
+x <- u^2
+# Correlation
+cor(x,y)
+
+################################################################################
+# Practical 4
+
+# Let us use the rejection method to generate a random variable having density function
+# f(x) = 20*x*(1-x)^3 0<x<1
+# Define the target density
+f <- function(x) {
+  return(20 * x * (1 - x)^3)
+}
+
+# Plot the density
+curve(f, 0, 1, col = 2, xlab = "x", ylab = "f(x)", main = "Target Density f(x) = 20x(1-x)^3")
+
+# Rejection sampling
+n <- 1000  # Number of samples
+c <- 135 / 16  # Correct constant
+sam <- numeric(n)
+count <- 0
+while (count < n) {
+  x <- runif(1, 0, 1)
+  u <- runif(1, 0, 1)
+  if (u < f(x) / c) {
+    count <- count + 1
+    sam[count] <- x
+  }
+}
+
+# Histogram with target density overlaid
+hist(sam, breaks = 20, prob = TRUE, xlab = "x", ylab = "Density", main = "Histogram of Samples")
+curve(f, 0, 1, col = 2, lwd = 2, add = TRUE)
+
+
+################################################################################
+# Practical 5
+# Implement the rejection sampling technique to generate a random variable following the
+# gamma distribution with parameters (3/2, 1), where the density function is given by
+# f(x) = K* x^0.5 * exp(-x) ;x>0
+K <- 2/sqrt(pi)
+
+f <- function(x){
+  return(2* x^0.5 * exp(-x) / sqrt(pi))
+}
+
+g <- function(x){
+  # To take a density of exponential
+  return(2* exp(-2*x/3)/3)
+}
+curve(f, 0, 10)
+curve(g, 0, 10)
+c <- 3^(3/2) /(2*pi*exp(1))^0.5
+sam <- c()
+while(TRUE){
+  u <- runif(1, 0,1)
+  x <- rexp(1, 2/3)
+  if(u < f(x)/(g(x)*c)){
+    sam <- c(sam, x)
+  }
+  if(length(sam) ==100){
+    break
+  }
+}
+sam
+hist(sam, breaks =20, probability = TRUE)
+curve(f,add = TRUE, col= 2,lwd = 2)
+
+################################################################################
+# Practical 6
+# Using the rejection technique generate a Normal random number Z(0,1) where the
+# absolute value of z has the following density function,
+# f(x) = (2/sqrt(2*pi)) * exp(-x^2 /2) ; x>0
+
+f <- function(x){
+  return((2/sqrt(2*pi)) * exp(-x^2 /2))
+}
+
+g <- function(x){
+  return(exp(-x))
+}
+c <- sqrt(2*exp(1)/ pi)
+sam <- c()
+while(TRUE){
+  u <- runif(1, 0,1)
+  x <- rexp(1, 1)
+  if(u < f(x)/(g(x)*c)){
+    sam <- c(sam, x)
+  }
+  if(length(sam) ==100){
+    break
+  }
+}
+sam
+curve(f, 0, 3)
+hist(sam, breaks =20)
+
+
+
+################################################################################
+# Practical 7
+# If Z is a standard normal variable, then show that
+# E(|z|) = sqrt(2/pi)
+# Actual value
+ac.value <- sqrt(2/pi); ac.value
+sam <- rnorm(1000)
+# Approximate value
+ap.value <- mean(abs(sam)) ; ap.value
+# Error 
+e <- abs(ap.value - ac.value); e
+
+
+################################################################################
+# Practical 8
+# Estimate the expected value E(x^2)when X ∼ N(0,1). using importance sampling with a proposal
+# distribution q(x) = N(5,2). Compare the target distribution p(x) and the proposal distribution q(x)
+# using a density plot.
+
+sam1 <- rnorm(1000, 0, 1)
+expx2 <- mean(sam1^2)
+expx2
+
+true_ex<- 1 
+# important  sampling
+sam2 <- rnorm(1000, 5,2)
+
+weights <- dnorm(sam2, 0,1)/ dnorm(sam2, 5,2) 
+
+exx2_imp <- sum(weights*sam2^2)/sum(weights) 
+exx2_imp
+
+x_vals <- seq(-5, 10, length.out = 1000)
+p_vals <-dnorm(x_vals, 0, 1)
+q_vals <- dnorm(x_vals, 5, 2)
+
+
+plot(x_vals, p_vals, type = "l", col = "blue", lwd = 2, ylim = c(0, max(p_vals, q_vals)), 
+     xlab = "x", ylab = "Density", main = "Comparison of Target and Proposal Distributions")
+lines(x_vals, q_vals, col = "red", lwd = 2, lty = 2)  
+
+
+
+################################################################################
+# Practical 9
+# Simulated Geometric Distribution
+p <- 0.3
+geo_simu <- function(p){
+  x <- 1
+  while (TRUE) {
+    u <- runif(1)
+    if(u <p){
+      return(x)
+    }
+    x <- x+1
+  }
+}
+
+n <- 1000
+samp <- replicate(n, geo_simu(p))
+x_vals <- 1:20
+theo_p <- (1-p)^(x_vals -1)*p
+
+sim_p <- table(samp) / n
+
+plot(as.numeric(names(sim_p)), as.numeric(sim_p), type = "h", col = "blue", lwd = 2, 
+     xlab = "X", ylab = "P(X)", main = "Simulated vs Theoretical Geometric Distribution",
+     ylim = c(0, max(sim_p, theo_p)))
+points(x_vals, theo_p, col = "red", pch = 19)
+legend("topright", legend = c("Simulated", "Theoretical"), col = c("blue", "red"), lwd = 2, pch = c(NA, 19))
+
+################################################################################
+# Practical 10
+# Suppose X is a random variable following the probability density function f(x). Use Monte Carlo
+# simulation to estimate the expectation of function h(x) = x/2^(x-1) 
+# Apply the Antithetic Variates Method to
+# improve the efficiency of the estimation and reduce variance. Use k samples to verify the accuracy of the
+# estimates. Compare the computational efficiency (time taken) and variance of both methods. Provide a
+# visualization of the Monte Carlo and Antithetic estimates to demonstrate the variance reduction effect.
+
+# let assume x ~ unifrom (0,1)
+h <- function(x){
+  return( x/2^(x-1))
+}
+
+l <- data.frame(n = c(),mean_mc =c(), var_mc =c(),mean_av= c(),var_av =c(), per_var = c())
+K = c(1000, 2000, 6000)
+for(n in K){
+  ###    Basic Monte Carlo
+  u <- runif(n)
+  mean_mc <- mean(h(u))
+  var_mc <- var(h(u))
+  cat("Basic MC Estimate: ",mean_mc , "\n")
+  cat("Variance - Basic MC: ", var_mc, "\n")
+  
+  ###    Antithetic Variates
+  u1 <- runif(n/2)
+  u2 <- 1-u1
+  mean_av <- (mean(h(u1))+mean(h(u2)))/2
+  var_av <-(var(h(u1))+var(h(u2))+ 2* cov(h(u1), h(u2)))/(4*n)
+  cat("Antithetic Estimate: ",mean_av , "\n")
+  cat("Variance - Antithetic: ",var_av  , "\n")
+  per_var <- (var_mc -var_av )*100/var_mc
+  l1 <- data.frame(n =c( n),mean_mc =c(mean_mc), var_mc =c(var_mc),mean_av= c(mean_av),var_av =c(var_av), per_var = c(per_var))
+  l <- rbind(l,l1)
+}
+l
+barplot(l$var_mc)
+barplot(l$var_av)
+
+
+
+################################################################################
+# Practical 11
+#Suppose Xis a random variable following the Exponential distribution with parameter λ.
+#Use Monte Carlo simulation to estimate the expectation of the function h(x) = exp(-x).
+#Apply the control Variates Method to improve the efficiency of the estimation and reduce
+#variance. Use k samples to verify the accuracy of the estimates. Compare the
+#computational efficiency (time taken) and variance of both methods. Provide a
+#visualization of the Monte Carlo and Antithetic estimates to demonstrate the variance
+# reduction effect.
+
+h <- function(x){
+  return( x/2^(x-1))
+}
+
+g <- function(x) {
+  x
+}
+l <- data.frame(n = c(),mean_mc =c(), var_mc =c(),mean_av= c(),var_av =c(), per_var = c())
+K = c(1000, 2000, 6000)
+for(n in K){
+  ###    Basic Monte Carlo
+  u <- rexp(n,1)
+  mean_mc <- mean(h(u))
+  var_mc <- var(h(u))
+  
+  ###    Antithetic Variates
+  u1 <- rexp(n/2, 1)
+  u2 <- g(u1)
+  mean_av <- (mean(h(u1))+mean(h(u2)))/2
+  var_av <-(var(h(u1))+var(h(u2))+ 2* cov(h(u1), h(u2)))/(4*n)
+  per_var <- (var_mc -var_av )*100/var_mc
+  l1 <- data.frame(n =c( n),mean_mc =c(mean_mc), var_mc =c(var_mc),mean_av= c(mean_av),var_av =c(var_av), per_var = c(per_var))
+  l <- rbind(l,l1)
+}
+l
+par(mfrow=c(1,2),cex.main = "value")
+barplot(l$var_mc,xlab = "Sample Size", ylab = "Variance")
+barplot(l$var_av,xlab = "Sample Size", ylab = "Variance")
+
+
+################################################################################
+# Practical 12
+# AR(1) Process simulation
+
+T <- 100
+phi <- 0.7
+sigma <- 1.5
+
+y <- numeric(T)
+ep <- rnorm(T, mean = 0, sd = sigma) 
+y[1] <- ep[1] 
+
+for( t in 2:T){
+  y[t] <- phi* y[t-1] +ep[t] 
+}
+# AR(1) simulation
+plot(1:T, y, col = 2,type = 'l')
+
+# MH algorithm to estimate the parameters
+#Not done in practical(said to leave)
+
+################################################################################
+# Practical 13
+
+# 1.Run the MCMC simulation using MH algorithm for 10,000 iterations to generate
+# samples of the parameters.
+# 2. Estimate the variance of the posterior mean using the nonoverlapping batch mean
+# (NBM ) method. Also, provide the necessary plots.
+
+set.seed(123)
+ar1<-function(T,phi,sigma){
+  y <- numeric(T)
+  ep <- rnorm(T, mean = 0, sd = sigma) 
+  y[1] <- ep[1] 
+  
+  for( t in 2:T){
+    y[t] <- phi* y[t-1] +ep[t] 
+  }
+  return(y)
+}
+
+T <- 100
+phi <- 0.7
+sigma <- 1.5
+y<-ar1(T,phi,sigma)
+
+mh_sampler<-function(y,n,sd_phi=0.1,sd_sigma2=0.1){
+  phi_mh<-numeric(n)
+  sigma2_mh<-numeric(n)
+  phi_mh[1]<-runif(1,-1,1)
+  sigma2_mh[1]<-var(y)
+  log_like<-function(phi,sigma2,y){
+    l<-length(y)
+    sum(dnorm(y[-1],mean=phi*y[-l],sd=sqrt(sigma2),log = T))
+  }
+  for(i in 2:n){
+    phi_prop<-rnorm(1,phi_mh[i-1],sd_phi)
+    sigma2_prop<-rnorm(1,sigma2_mh[i-1],sd_sigma2)
+    if(abs(phi_prop)<1 && sigma2_prop>0){
+      log_acp_ratio<-log_like(phi_prop,sigma2_prop,y) - log_like(phi_mh[i-1],sigma2_mh[i-1],y)
+      if(log(runif(1))<log_acp_ratio){
+        phi_mh[i]<-phi_prop
+        sigma2_mh[i]<-sigma2_prop
+      }
+      else{
+        phi_mh[i]<-phi_mh[i-1]
+        sigma2_mh[i]<-sigma2_mh[i-1]
+      }
+    }
+  }
+  return(list(phi=phi_mh,sigma2=sigma2_mh))
+}
+samples<-mh_sampler(y,n=10000);samples
+
+nbm_var<-function(x,batch_size){
+  n_batch<-floor(length(x)/batch_size)
+  batch_mean<-sapply(1:n_batch,function(i){
+    mean(x[((i-1)*batch_size+1) : (i*batch_size)])
+  })
+  return(var(batch_mean)/n_batch)
+}
+cat('Estimated variance of phi using NBM :',nbm_var(samples$phi,batch_size = 50))
+cat('Estimated variance of sigma2 using NBM :',nbm_var(samples$sigma2,batch_size = 50))
+
+par(mfrow=c(3,2))
+plot(samples$phi,type = 'l',main = 'Trace plot of phi',xlab = 'iterations',ylab = 'phi')
+plot(samples$sigma2,type = 'l',main = 'Trace plot of sigma^2',xlab = 'iterations',ylab = 'sigma^2')
+hist(samples$phi,breaks = 50,probability = T)
+hist(samples$sigma2,breaks = 50,probability = T)
+acf(samples$phi,main = 'Autocorrelation function of phi')
+acf(samples$sigma2,main = 'Autocorrelation function of sigma^2')
+
+################################################################################
+# Practical 14
+# Generate random samples from a Normal distribution using the Metropolis-Hastings
+# (M-H) algorithm and estimate its parameters. Then, implement a burn-in period to
+# remove initial bias and compare results using the Mean Squared Error (MSE).
+# Do it for different sample sizes (n=50,100,250)
+
+
+mh_sample<-function(n,mu = 0,sigma = 1,prop_sd = 1){
+  set.seed(123)
+  samples<-numeric(n)
+  x<-rnorm(1,mu,sigma)
+  samples[1]<-x
+  for(i in 2:n){
+    prop<-rnorm(1,x,prop_sd)
+    acc_ratio<-dnorm(prop,mu,sigma)/dnorm(x,mu,sigma)
+    if(runif(1)<acc_ratio){
+      x<-prop
+    }
+    samples[i]<-x
+  }
+  return(samples)
+}
+
+n_mh<-10000
+mu<-0
+sigma<-1
+samples<-mh_sample(n_mh,mu,sigma,prop_sd=2)
+plot(cumsum(samples)/1:n_mh)
+
+n<-c(50,100,250)
+results<-data.frame(n=integer(),est_mean=numeric(),est_sd=numeric(),mse_mean=numeric(),mse_sd=numeric(),
+                    est_mean_burn=numeric(),est_sd_burn=numeric(),mse_mean_burn=numeric(),
+                    mse_sd_burn=numeric())
+for(t in n){
+  s<-mh_sample(t)
+  est_mean<-mean(s)
+  est_sd<-sd(s)
+  mse_mean<-(mu-est_mean)^2
+  mse_sd<-(sigma-est_sd)^2
+  s_b<-samples[5000:(5000+t-1)]
+  est_mean_burn<-mean(s_b)
+  est_sd_burn<-sd(s_b)
+  mse_mean_burn<-(mu-est_mean_burn)^2
+  mse_sd_burn<-(sigma-est_sd_burn)^2
+  results<-rbind(results,data.frame(n=t,est_mean=est_mean,est_sd=est_sd,mse_mean=mse_mean,mse_sd=mse_sd,
+                                    est_mean_burn=est_mean_burn,est_sd_burn=est_sd_burn,
+                                    mse_mean_burn=mse_mean_burn,mse_sd_burn=mse_sd_burn))
+}
+print(results)
+
+
+################################################################################
+# Practical 15
+
+
+#Implement the Metropolis-Hastings algorithm to generate random samples from a Rayleigh distribution
+#using a Chi-square distribution as the proposal.
+#Perform the following analyses:
+#a) Compute and report the acceptance rate of the Metropolis-Hastings algorithm based on the above
+#information.
+#b) Now use a fixed proposal distribution (e.g., Chi-square with a constant degree of freedom) and
+#compute the acceptance rate of the Metropolis-Hastings algorithm.
+#c) Comment on whether the acceptance rate is satisfactory and how it relates to the efficiency of the
+#algorithm.
+#d) Apply techniques to reduce bias and remove autocorrelation from the M-H sample.
+#e) Perform visualizations to verify whether the generated random numbers follow a Rayleigh
+#distribution.
+
+rayleigh = function(x,s=1) {
+  return(ifelse(x>=0,(x/ s^2)*exp((-x^2)/(2*s^2)),0))
+}
+
+#without fixed 
+mh_1<-function(n=10000,s = 1, prop_df = 2, x0=1){
+  samples = numeric(n)
+  accepted = 0
+  samples[1] = x0
+  for(i in 2:n){
+    y = rchisq(1, df = samples[i-1])
+    h_x = rayleigh(samples[i-1],s)
+    h_y = rayleigh(y,s)
+    q_x = dchisq(samples[i-1],prop_df)
+    q_y = dchisq(y,prop_df)		
+    acc_ratio= (h_y*q_x)/(h_x*q_y)
+    if(runif(1)<min(1,acc_ratio)){
+      samples[i] = y
+      accepted = accepted +1
+    }else{
+      samples[i] = samples[i-1]
+    }
+  }
+  return(list(samples=samples, acc_rate = accepted/n))
+}
+sample1= mh_1(n=10000, prop_df = 2)
+sample1$acc_rate
+
+#fixed proposal distribution
+mh_2<-function(n=10000,s = 1, prop_df = 2, x0=1){
+  samples = numeric(n)
+  accepted = 0
+  samples[1] = x0
+  for(i in 2:n){
+    y = rchisq(1, df = prop_df)
+    h_x = rayleigh(samples[i-1],s)
+    h_y = rayleigh(y,s)
+    q_x = dchisq(samples[i-1],prop_df)
+    q_y = dchisq(y,prop_df)		
+    acc_ratio= (h_y*q_x)/(h_x*q_y)
+    if(runif(1)<min(1,acc_ratio)){
+      samples[i] = y
+      accepted = accepted +1
+    }else{
+      samples[i] = samples[i-1]
+    }
+  }
+  return(list(samples=samples, acc_rate = accepted/n))
+}
+
+sample2= mh_2(n=10000, prop_df = 2)
+hist(sample2$samples,breaks=50, probability = T, main='MH samples from Rayl;eigh',xlab = "X")
+curve(rayleigh(x),col = 'red',lwd = 2,add=T)
+sample2$acc_rate
+plot(cumsum(sample2$samples/1:10000))
+
+burn_samples = sample2$samples[1001:10000]
+par(mfrow = c(1,2))
+acf(sample2$samples,main= "ACF of MH samples")
+acf(burn_samples,main="ACF of Burn Samples")
+
+
+
+
+#########################################################################
+#prac 16
+# Gibbs Sampling for Exponential Posterior Distribution (No Burn-in)
+
+# Set random seed for reproducibility
+set.seed(123)
+
+# 1. Load or simulate data
+# For demonstration, I'll generate some sample data
+data <- read.csv("C:/Users/Tony/Downloads/data-exponential.csv")$x
+n <- 40
+true_a <- 2
+true_b <- 3
+data <- rexp(n, rate = true_a * true_b)
+
+# 2. Gibbs Sampling Implementation (without burn-in)
+gibbs_exponential <- function(data, n_iter = 10000) {
+  n <- length(data)
+  sum_x <- sum(data)
+  
+  # Initialize storage for samples
+  a_samples <- numeric(n_iter)
+  b_samples <- numeric(n_iter)
+  
+  # Initial values
+  a <- 1
+  b <- 1
+  
+  for (i in 1:n_iter) {
+    # Sample a given b (Gamma distribution)
+    a_shape <- n + 1
+    a_rate <- b * sum_x + 1
+    a <- rgamma(1, shape = a_shape, rate = a_rate)
+    
+    # Sample b given a (Gamma distribution)
+    b_shape <- n + 1
+    b_rate <- a * sum_x + 1
+    b <- rgamma(1, shape = b_shape, rate = b_rate)
+    
+    # Store samples
+    a_samples[i] <- a
+    b_samples[i] <- b
+  }
+  
+  return(list(a = a_samples, b = b_samples, data = data))
+}
+
+# 3. Run Gibbs sampling (using all samples)
+results <- gibbs_exponential(data, n_iter = 10000)
+
+# 4. Diagnostic Plots and Analysis
+
+# Trace plots to assess convergence
+par(mfrow = c(2, 2))
+plot(results$a, type = "l", main = "Trace plot for a", ylab = "a", col = "blue")
+plot(results$b, type = "l", main = "Trace plot for b", ylab = "b", col = "red")
+
+# Histograms of the posterior samples
+hist(results$a, main = "Posterior distribution of a", xlab = "a", col = "lightblue", breaks = 30)
+abline(v = mean(results$a), col = "red", lwd = 2)
+abline(v = true_a, col = "green", lwd = 2) # Only for simulated data
+
+hist(results$b, main = "Posterior distribution of b", xlab = "b", col = "lightpink", breaks = 30)
+abline(v = mean(results$b), col = "red", lwd = 2)
+abline(v = true_b, col = "green", lwd = 2) # Only for simulated data
+
+par(mfrow = c(1, 2))
+acf(results$a, main = "Autocorrelation for a")
+acf(results$b, main = "Autocorrelation for b")
+
+# 7. Cumulative mean plots to check convergence
+par(mfrow = c(1, 2))
+plot(cumsum(results$a)/1:length(results$a), type = "l", 
+     main = "Cumulative mean for a", xlab = "Iteration", ylab = "Mean")
+abline(h = mean(results$a), col = "red", lty = 2)
+
+plot(cumsum(results$b)/1:length(results$b), type = "l", 
+     main = "Cumulative mean for b", xlab = "Iteration", ylab = "Mean")
+abline(h = mean(results$b), col = "red", lty = 2)
+
+
+#########################################################################
+#prac 17
+#1. Estimate the standard error and bias of the maximum likelihood estimator (MLE) of the shape
+#parameter of the Weibull distribution using parametric bootstrap.
+#a sample of lifetimes (in hours) of a mechanical component is modeled by a Weibull distribution.
+#The observed data is:
+# Time = 120, 150, 200, 170, 180, 220, 140, 160, 210, 190.
+# Install required package if not already installed
+# install.packages("MASS")
+
+library(MASS)
+lifetimes <- c(120, 150, 200, 170, 180, 220, 140, 160, 210, 190)
+
+# Fit Weibull distribution to data
+fit <- fitdistr(lifetimes, "weibull")
+shape_mle <- fit$estimate["shape"]  
+cat("Original MLE of shape parameter:", shape_mle, "\n")
+
+# Parametric bootstrap
+set.seed(123)  
+n <- length(lifetimes)
+B <- 1000  
+boot_shapes <- numeric(B)
+
+for (i in 1:B) {
+  boot_data <- rweibull(n, shape = fit$estimate["shape"], scale = fit$estimate["scale"])
+  boot_fit <- fitdistr(boot_data, "weibull")
+  boot_shapes[i] <- boot_fit$estimate["shape"]
+}
+se_shape <- sd(boot_shapes)
+mean_boot_shape <- mean(boot_shapes)
+bias_shape <- mean_boot_shape - shape_mle
+
+cat("Bootstrap Standard Error of Shape MLE:", se_shape, "\n")
+cat("Bootstrap Bias of Shape MLE:", bias_shape, "\n")
+cat("Mean of Bootstrap Shape MLEs:", mean_boot_shape, "\n")
+
+
+
+#2. Estimate the mean and confidence interval of average household income using nonparametric
+#bootstrap.
+#Income = 45, 50, 52, 47, 60, 58, 55, 53, 49, 65.
+
+incomes <- c(45, 50, 52, 47, 60, 58, 55, 53, 49, 65)
+
+sample_mean <- mean(incomes)
+cat("Original Sample Mean:", sample_mean, "\n")
+
+set.seed(123) 
+n <- length(incomes)
+B <- 1000 
+boot_means <- numeric(B)
+
+for (i in 1:B) {
+  boot_sample <- sample(incomes, size = n, replace = TRUE)
+  boot_means[i] <- mean(boot_sample)
+}
+
+boot_mean <- mean(boot_means)
+
+
+ci_lower <- quantile(boot_means, 0.025)
+ci_upper <- quantile(boot_means, 0.975)
+
+cat("Bootstrap Mean:", boot_mean, "\n")
+cat("95% Confidence Interval:", ci_lower, "to", ci_upper, "\n")
+
+
+
+#3. Estimate the standard error of the mean using the jackknife method for data generated from a
+#Gamma distribution.
+#A researcher records the rainfall (in mm) over 10 consecutive days during monsoon
+#rainfall = 8.2, 10.4, 12.3, 9.5, 11.0, 10.8, 9.7, 13.2, 10.1, 12.0.
+
+rainfall <- c(8.2, 10.4, 12.3, 9.5, 11.0, 10.8, 9.7, 13.2, 10.1, 12.0)
+
+sample_mean <- mean(rainfall)
+cat("Original Sample Mean:", sample_mean, "\n")
+
+n <- length(rainfall)
+jack_means <- numeric(n)
+
+for (i in 1:n) {
+  # Compute mean excluding the i-th observation
+  jack_sample <- rainfall[-i]
+  jack_means[i] <- mean(jack_sample)
+}
+
+# Jackknife standard error
+jack_var <- ((n - 1) / n) * sum((jack_means - mean(jack_means))^2)
+jack_se <- sqrt(jack_var)
+
+# Output results
+cat("Jackknife Standard Error of Mean:", jack_se, "\n")
+
+
+
+#########################################################################
+#prac 18
+#You have shopping data from customers. The actual type of shopper (e.g., Budget,
+#Moderate, Premium) is not observed. Simulate a dataset of total spend from 3 Gaussian
+#distributions with your own chosen parameters. Derive and implement the Expectation-
+#Maximization (EM) algorithm to estimate the means, variances, and mixing proportions
+#of these 3 components.
+
+set.seed(123)
+
+# Simulate data
+n <- 1000
+pi_true <- c(0.4, 0.35, 0.25)  # Mixing proportions
+mu_true <- c(50, 100, 200)     # Means
+sigma_true <- c(10, 15, 30)    # Standard deviations
+K <- 3                         # Number of components
+
+# Assign each observation to a component
+z <- sample(1:K, n, replace = TRUE, prob = pi_true)
+data <- numeric(n)
+for (i in 1:n) {
+  data[i] <- rnorm(1, mean = mu_true[z[i]], sd = sigma_true[z[i]])
+}
+
+# EM algorithm for Gaussian Mixture Model
+em_gmm <- function(data, K, max_iter = 100, tol = 1e-4) {
+  n <- length(data)
+  # Initialize parameters
+  pi <- rep(1/K, K)  # Equal mixing proportions
+  mu <- runif(K, min(data), max(data))  # Random means
+  sigma2 <- rep(var(data)/K, K)  # Initial variances
+  
+  # Store parameter history for convergence plots
+  mu_history <- matrix(0, max_iter, K)
+  sigma2_history <- matrix(0, max_iter, K)
+  pi_history <- matrix(0, max_iter, K)
+  
+  for (iter in 1:max_iter) {
+    # E-step: Compute responsibilities
+    gamma <- matrix(0, n, K)
+    for (k in 1:K) {
+      gamma[, k] <- pi[k] * dnorm(data, mean = mu[k], sd = sqrt(sigma2[k]))
+    }
+    gamma <- gamma / rowSums(gamma)  # Normalize probabilities
+    
+    # M-step: Update parameters
+    Nk <- colSums(gamma)  # Effective number of points in each component
+    pi_new <- Nk / n
+    mu_new <- colSums(gamma * data) / Nk
+    sigma2_new <- colSums(gamma * (matrix(data, n, K) - matrix(mu, n, K, byrow = TRUE))^2) / Nk
+    
+    # Store history
+    mu_history[iter, ] <- mu_new
+    sigma2_history[iter, ] <- sigma2_new
+    pi_history[iter, ] <- pi_new
+    
+    # Check convergence
+    if (iter > 1) {
+      param_diff <- max(
+        max(abs(mu_new - mu)),
+        max(abs(sigma2_new - sigma2)),
+        max(abs(pi_new - pi))
+      )
+      if (param_diff < tol) {
+        cat("Converged after", iter, "iterations\n")
+        break
+      }
+    }
+    
+    # Update parameters
+    pi <- pi_new
+    mu <- mu_new
+    sigma2 <- sigma2_new
+  }
+  
+  return(list(pi = pi, mu = mu, sigma2 = sigma2, gamma = gamma,
+              mu_history = mu_history[1:iter, ],
+              sigma2_history = sigma2_history[1:iter, ],
+              pi_history = pi_history[1:iter, ]))
+}
+
+# Run EM algorithm
+result <- em_gmm(data, K = 3)
+
+# Visualizations
+par(mfrow = c(2, 2))
+
+# 1. Histogram with fitted mixture density
+hist(data, breaks = 50, probability = TRUE, main = "Data and Fitted Mixture",
+     xlab = "Total Spend", ylab = "Density")
+x <- seq(min(data), max(data), length.out = 1000)
+mixture_density <- 0
+for (k in 1:K) {
+  mixture_density <- mixture_density + result$pi[k] * dnorm(x, result$mu[k], sqrt(result$sigma2[k]))
+}
+lines(x, mixture_density, col = "red", lwd = 2)
+
+# 2. Convergence of means
+plot(1:nrow(result$mu_history), result$mu_history[, 1], type = "l", col = 1,
+     main = "Convergence of Means", xlab = "Iteration", ylab = "mu",
+     ylim = range(result$mu_history))
+for (k in 2:K) {
+  lines(1:nrow(result$mu_history), result$mu_history[, k], col = k)
+}
+abline(h = mu_true, lty = 2, col = 1:K)
+
+# 3. Convergence of variances
+plot(1:nrow(result$sigma2_history), result$sigma2_history[, 1], type = "l", col = 1,
+     main = "Convergence of Variances", xlab = "Iteration", ylab = "sigma^2",
+     ylim = range(result$sigma2_history))
+for (k in 2:K) {
+  lines(1:nrow(result$sigma2_history), result$sigma2_history[, k], col = k)
+}
+abline(h = sigma_true^2, lty = 2, col = 1:K)
+
+# 4. Convergence of mixing proportions
+plot(1:nrow(result$pi_history), result$pi_history[, 1], type = "l", col = 1,
+     main = "Convergence of Mixing Proportions", xlab = "Iteration", ylab = "pi",
+     ylim = range(result$pi_history))
+for (k in 2:K) {
+  lines(1:nrow(result$pi_history), result$pi_history[, k], col = k)
+}
+abline(h = pi_true, lty = 2, col = 1:K)
+
+# Output results
+cat("Estimated Mixing Proportions:", result$pi, "\n")
+cat("Estimated Means:", result$mu, "\n")
+cat("Estimated Variances:", result$sigma2, "\n")
+
+
+
+#########################################################################
+#prac 19
+#A machine measures the lifetime (in hours) of components. However, due to limitations, any
+#lifetime greater than 7 hours is not recorded exactly; it is only known that the lifetime exceeds 7
+#hours (right-censored). Assume that the actual lifetimes follow a Normal distribution with
+#unknown mean μ and variance σ2. A sample of recorded lifetimes is: 4.2, 5.8, 6.1, >7, 3.9, 5.5,
+#>7, >7, 4.8. Write an R code to implement the full EM algorithm.
+
+set.seed(123)
+
+# Data
+data <- c(4.2, 5.8, 6.1, NA, 3.9, 5.5, NA, NA, 4.8)  # NA for censored (>7)
+censored <- is.na(data)  # Logical vector: TRUE for censored
+uncensored <- !censored
+x <- data[!censored]  # Uncensored observations
+C <- 7  # Censoring threshold
+n_u <- sum(uncensored)  # Number of uncensored (6)
+n_v <- sum(censored)    # Number of censored (3)
+n <- n_u + n_v          # Total observations (9)
+
+# EM algorithm
+em_normal_censored <- function(x, censored, C, max_iter = 1000, tol = 1e-4) {
+  # Initialize parameters
+  mu <- mean(x[!censored])  # Initial mu: mean of uncensored
+  sigma2 <- var(x[!censored])  # Initial sigma^2: variance of uncensored
+  
+  for (iter in 1:max_iter) {
+    # Store old parameters
+    mu_old <- mu
+    sigma2_old <- sigma2
+    sigma <- sqrt(sigma2)
+    
+    # E-step: Compute expectations for censored observations
+    xi <- (C - mu) / sigma
+    phi_xi <- dnorm(xi)  # Standard normal density at xi
+    Phi_xi <- pnorm(xi)  # Standard normal CDF at xi
+    hazard <- phi_xi / (1 - Phi_xi)  # Hazard function
+    
+    # E[Z_i | Z_i > C]
+    E_Z <- mu + sigma * hazard
+    # E[Z_i^2 | Z_i > C]
+    E_Z2 <- sigma2 * (1 + xi * hazard) + mu^2 + 2 * mu * sigma * hazard
+    
+    # M-step: Update mu
+    mu <- (sum(x[!censored]) + n_v * E_Z) / n
+    
+    # Update sigma^2
+    sum_squares_uncensored <- sum((x[!censored] - mu)^2)
+    sum_squares_censored <- n_v * (E_Z2 - 2 * mu * E_Z + mu^2)
+    sigma2 <- (sum_squares_uncensored + sum_squares_censored) / n
+    
+    # Check convergence
+    if (max(abs(mu - mu_old), abs(sigma2 - sigma2_old)) < tol) {
+      cat("Converged after", iter, "iterations\n")
+      break
+    }
+  }
+  
+  return(list(mu = mu, sigma2 = sigma2, iterations = iter))
+}
+
+# Run EM algorithm
+result <- em_normal_censored(data, censored, C = 7)
+
+# Output results
+cat("Estimated mu:", result$mu, "\n")
+cat("Estimated sigma^2:", result$sigma2, "\n")
+

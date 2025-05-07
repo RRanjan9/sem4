@@ -1,3 +1,4 @@
+################  ############1.
 # Non linear Equation 
 # Data from the image
 x <- c(8, 10, 12, 14, 16, 18, 20, 22, 24, 26, 28, 30, 32, 34, 36, 38, 40, 42)
@@ -22,11 +23,94 @@ lines(x_seq, y_fit, col = "red", lwd = 2)
 legend("bottomright", legend = c("Observed", "Fitted"), col = c("blue", "red"),
        pch = c(19, NA), lty = c(NA, 1), lwd = c(NA, 2))
 
+########################################################################################
+######################### 2. 
+# Hard wood
+# Input the Hardwood Data
+x <- c(1, 1.5, 2, 2.5, 3, 3.5, 4, 4.5, 5, 5.5, 6, 6.5, 7, 8, 9, 10, 11, 12, 13, 14, 15)
+y <- c(6.3, 11.1, 20.0, 24.0, 26.1, 26.0, 26.1, 30.0, 33.8, 34.0, 38.1, 39.9, 42.0,
+       46.1, 53.1, 52.0, 52.5, 48.0, 42.8, 27.8, 21.9)
+
+# Center the x values
+x_bar <- mean(x)
+x_c <- x - x_bar
+
+model <- lm(y ~ x_c + I(x_c^2))
+summary(model)
 
 
+plot(x, y, main = "Polynomial Regression Fit", xlab = "Hardwood Concentration (%)", ylab = "Tensile Strength (psi)", pch = 19)
+
+x_seq <- seq(min(x), max(x), length.out = 200)
+x_c_seq <- x_seq - x_bar
+y_fit <- predict(model, newdata = data.frame(x_c = x_c_seq))
+lines(x_seq, y_fit, col = "blue", lwd = 2)
 
 
+##############################################################################################
+########################## 3. 
+# Logistic 
 
+# Data
+log_conc <- c(1.6907, 1.7242, 1.7552, 1.7842, 1.8113, 1.8369, 1.8610, 1.8839)
+killed <- c(6, 13, 18, 28, 52, 53, 61, 60)
+total <- c(59, 60, 62, 56, 63, 59, 62, 60)
+
+# Logistic Regression using glm
+model <- glm(cbind(killed, total - killed) ~ log_conc, family = binomial)
+
+# Summary of the model
+summary(model)
+
+# Predicted probabilities
+predicted <- predict(model, type = "response")
+
+# Plotting observed vs fitted values
+plot(log_conc, killed / total, pch = 16, col = "blue", xlab = "log(CS2 concentration)", ylab = "Proportion killed")
+lines(log_conc, predicted, col = "red", lwd = 2)
+legend("topleft", legend = c("Observed", "Fitted"), col = c("blue", "red"), pch = c(16, NA), lty = c(NA, 1))
+
+##################################################################################################################
+##################### 4.
+
+data <- data.frame(obsno = 1:25,
+                   y = c(16.68,11.50,12.03,14.88,13.75,18.11,8,17.83,79.24,21.50,40.33,21,13.50,19.75,24,29,15.35,19,9.50,35.10,17.90,52.32,18.75,19.83,10.75),
+                   x1 = c(7,3,3,4,6,7,2,30,5,10,16,4,6,6,9,10,6,7,3,17,10,26,9,8,4),
+                   x2 = c(560,220,340,80,150,330,110,1460,605,688,215,255,462,448,448,60,200,132,36,770,140,810,450,635,150))
+
+
+# Fit multiple linear regression model
+model <- lm(y ~ x1 + x2, data = data)
+summary(model)
+
+# Residuals
+data$residual <- residuals(model)
+
+# Standardized residuals
+data$standardized_resid <- rstandard(model)
+
+# Studentized residuals
+data$studentized_resid <- rstudent(model)
+
+# Leverage (hat values)
+data$leverage <- hatvalues(model)
+
+# Cook's Distance (Influence measure)
+data$cooks_distance <- cooks.distance(model)
+
+# PRESS residuals: prediction residuals
+press_resid <- residuals(model) / (1 - hatvalues(model))
+data$press_resid <- press_resid
+
+leverage_cutoff <- 2 * (length(coef(model)) / nrow(data))  
+influential_cooks_cutoff <- 4 / nrow(data)
+
+# Identify influential observations and high leverage points
+data$high_leverage <- data$leverage > leverage_cutoff
+data$influential <- data$cooks_distance > influential_cooks_cutoff
+
+# View results
+print(data)
 
 
 

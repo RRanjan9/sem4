@@ -48,7 +48,7 @@ for (tau in tau_values) {
 posterior_table <- data.frame(tau = tau_values, PosteriorMean = posterior_means)
 print(posterior_table)
 
-
+Practical 2:
 # Let us consider the following dataset follows an exponential distribution with scale parameter θ. Let us consider the prior 1/θ. Obtain posterior distribution, Bayes estimator, and 0.95 HPD interval for the parameter θ.
 
 

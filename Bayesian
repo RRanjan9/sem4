@@ -52,37 +52,54 @@ print(posterior_table)
 # Let us consider the following dataset follows an exponential distribution with scale parameter θ. Let us consider the prior 1/θ. Obtain posterior distribution, Bayes estimator, and 0.95 HPD interval for the parameter θ.
 
 
-data <- c(3.29, 7.53, 0.48, 2.03, 0.36, 0.07, 4.49, 1.05, 9.15,
-          3.67, 2.22, 2.16, 4.06, 11.62, 8.26, 1.96, 9.13, 1.78, 3.81, 17.02)
+# Given Data
+x <- c(3.29, 7.53, 0.48, 2.03, 0.36, 0.07, 4.49, 1.05, 9.15,
+       3.67, 2.22, 2.16, 4.06, 11.62, 8.26, 1.96, 9.13, 1.78, 3.81, 17.02)
 
-# Sufficient statistics
-n <- length(data)
-S <- sum(data)
+n <- length(x)
+S <- sum(x)
 
-# Bayes estimator: posterior mean
-bayes_estimate <- S / (n - 1)
+# Create grid of theta values
+theta_grid <- seq(0.01, 100, length.out = 10000)
 
+# Posterior density (up to normalization): Inverse Gamma(n, S)
+posterior_unnormalized <- theta_grid^(-n - 1) * exp(-S / theta_grid)
 
-# 95% HPD Interval using MCMC
-library(coda)
-# Draw samples from the posterior (Inverse Gamma)
-library(MCMCpack)
-#samples <- rinvgamma(10000, shape = n, scale = S)
-samples <- 1/rgamma(10000, shape = n, rate  = S)
-# HPD interval
-hpd <- HPDinterval(as.mcmc(samples), prob = 0.95)
+# Normalize the posterior
+posterior_density <- posterior_unnormalized / sum(posterior_unnormalized)
 
-cat("Bayes Estimator (Posterior Mean):", round(bayes_estimate, 4), "\n")
-cat("95% HPD Interval:\n")
-print(hpd)
+# Bayes estimator (posterior mean)
+posterior_mean <- sum(theta_grid * posterior_density)
+cat("Bayes estimator (posterior mean):", posterior_mean, "\n")
 
-par(mfrow = c(1, 1))
-# Plot the posterior
-hist(samples, breaks = 50, probability = TRUE,
-     main = expression("Posterior of " * theta),
-     xlab = expression(theta), col = "lightblue", border = "gray")
-lines(density(samples), col = "blue", lwd = 2)
-abline(v = bayes_estimate, col = "red", lwd = 2, lty = 2)
+# Compute HPD interval
+sorted_indices <- order(posterior_density, decreasing = TRUE)
+sorted_theta <- theta_grid[sorted_indices]
+sorted_density <- posterior_density[sorted_indices]
+
+# Cumulative sum to find 95% highest mass
+cum_probs <- cumsum(sorted_density)
+cutoff_index <- which(cum_probs >= 0.95)[1]
+hpd_theta_values <- sorted_theta[1:cutoff_index]
+
+# HPD interval = range of selected theta values
+hpd_interval <- range(hpd_theta_values)
+cat("HPD Interval: [", hpd_interval[1], ",", hpd_interval[2], "]\n")
+
+# Plot posterior density
+plot(theta_grid, posterior_density, type = "l", col = "blue", lwd = 2,
+     main = "Posterior Distribution with HPD Interval",
+     xlab = expression(theta), ylab = "Posterior Density")
+
+# Add vertical lines for HPD bounds
+abline(v = hpd_interval, col = "red", lwd = 2, lty = 2)
+
+# Add posterior mean
+abline(v = posterior_mean, col = "darkgreen", lwd = 2, lty = 3)
+
+# Add legend
+legend("topright", legend = c("Posterior", "HPD Interval", "Posterior Mean"),
+       col = c("blue", "red", "darkgreen"), lty = c(1, 2, 3), lwd = 2)
 
 # Practical 3:
 	Consider the situation where a child is given an intelligence test. Assume that the test result X is N(θ,100), where θ is the true I.Q. (intelligence) level of the child, as measured by the test. In other words, if the child were to take a large number of independent similar tests, his average score would be about θ. Assume also that the population, as a whole, θ is distributed according to a N(100,225) distribution. Thus, if a child scores 115 on the test, then:

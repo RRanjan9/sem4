@@ -8,20 +8,33 @@ y <- c(0.490, 0.475, 0.450, 0.437, 0.433, 0.455, 0.423, 0.407, 0.407,
 model <- nls(y ~ alpha + (0.49 - alpha) * exp(-beta * (x - 8)),
              start = list(alpha = 0.39, beta = 0.1))
 
-# Estimated parameters
 summary(model)
 
-# Plot data and fitted curve
 plot(x, y, main = "Nonlinear Regression Fit",
      xlab = "X", ylab = "Y", pch = 19, col = "blue")
 
-# Predicted values
 x_seq <- seq(min(x), max(x), length.out = 200)
 alpha_est <- coef(model)["alpha"]
 beta_est <- coef(model)["beta"]
 y_fit <- alpha_est + (0.49 - alpha_est) * exp(-beta_est * (x_seq - 8))
 
-# Add fitted curve
 lines(x_seq, y_fit, col = "red", lwd = 2)
 legend("bottomright", legend = c("Observed", "Fitted"), col = c("blue", "red"),
        pch = c(19, NA), lty = c(NA, 1), lwd = c(NA, 2))
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

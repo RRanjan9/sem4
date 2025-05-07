@@ -850,63 +850,25 @@ cat("Estimated Variances:", result$sigma2, "\n")
 #unknown mean μ and variance σ2. A sample of recorded lifetimes is: 4.2, 5.8, 6.1, >7, 3.9, 5.5,
 #>7, >7, 4.8. Write an R code to implement the full EM algorithm.
 
-set.seed(123)
+obs <- c(4.2, 5.8, 6.1, 7, 3.9, 5.5, 7, 7, 4.8)
+cen <- c(1,1,1,0,1,1,0,0,1)
 
-# Data
-data <- c(4.2, 5.8, 6.1, NA, 3.9, 5.5, NA, NA, 4.8)  # NA for censored (>7)
-censored <- is.na(data)  # Logical vector: TRUE for censored
-uncensored <- !censored
-x <- data[!censored]  # Uncensored observations
-C <- 7  # Censoring threshold
-n_u <- sum(uncensored)  # Number of uncensored (6)
-n_v <- sum(censored)    # Number of censored (3)
-n <- n_u + n_v          # Total observations (9)
+mu <- mean(obs[cen==1]); mu
+sigma <- sqrt(var(obs[cen==1])) ; sigma
 
-# EM algorithm
-em_normal_censored <- function(x, censored, C, max_iter = 1000, tol = 1e-4) {
-  # Initialize parameters
-  mu <- mean(x[!censored])  # Initial mu: mean of uncensored
-  sigma2 <- var(x[!censored])  # Initial sigma^2: variance of uncensored
-  
-  for (iter in 1:max_iter) {
-    # Store old parameters
-    mu_old <- mu
-    sigma2_old <- sigma2
-    sigma <- sqrt(sigma2)
-    
-    # E-step: Compute expectations for censored observations
-    xi <- (C - mu) / sigma
-    phi_xi <- dnorm(xi)  # Standard normal density at xi
-    Phi_xi <- pnorm(xi)  # Standard normal CDF at xi
-    hazard <- phi_xi / (1 - Phi_xi)  # Hazard function
-    
-    # E[Z_i | Z_i > C]
-    E_Z <- mu + sigma * hazard
-    # E[Z_i^2 | Z_i > C]
-    E_Z2 <- sigma2 * (1 + xi * hazard) + mu^2 + 2 * mu * sigma * hazard
-    
-    # M-step: Update mu
-    mu <- (sum(x[!censored]) + n_v * E_Z) / n
-    
-    # Update sigma^2
-    sum_squares_uncensored <- sum((x[!censored] - mu)^2)
-    sum_squares_censored <- n_v * (E_Z2 - 2 * mu * E_Z + mu^2)
-    sigma2 <- (sum_squares_uncensored + sum_squares_censored) / n
-    
-    # Check convergence
-    if (max(abs(mu - mu_old), abs(sigma2 - sigma2_old)) < tol) {
-      cat("Converged after", iter, "iterations\n")
-      break
-    }
-  }
-  
-  return(list(mu = mu, sigma2 = sigma2, iterations = iter))
-}
+EM_algo <- function(data, cen, mu, sigma, tol=1e-6){
+  for(i in 1:1000){
+    expc <- data
+    expc[cen==0] <- mu + (sigma*dnorm((7 - mu)/sigma, mean = mu, sd = sigma)/(1 - dnorm((7-mu)/sigma, mean = mu, sd = sigma)))
+    new_mu <- mean(expc)
+    new_sigma <- sqrt(var(expc))
+    if(abs(mu - new_mu) < tol && abs(sigma - new_sigma) < tol){
+      break}
+    mu <- new_mu
+    sigma <- new_sigma}
+  print(i)
+  return(list(mu = mu, sigma = sigma))}
 
-# Run EM algorithm
-result <- em_normal_censored(data, censored, C = 7)
-
-# Output results
-cat("Estimated mu:", result$mu, "\n")
-cat("Estimated sigma^2:", result$sigma2, "\n")
-
+result <- EM_algo(obs, cen, mu, sigma)
+cat("Estimated Mean", result$mu)
+cat('Estimated Sigma', result$sigma)
